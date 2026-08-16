@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>League Draftboard</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 h-screen overflow-hidden p-3 font-sans flex flex-col justify-between">
+
+    <div class="max-w-7xl w-full mx-auto flex flex-col h-full gap-3">
+        
+        <!-- Compact Header & Status & Timer & Undo -->
+        <div class="flex justify-between items-center bg-slate-800 px-4 py-2 rounded-lg border border-slate-700 shadow-md shrink-0">
+            <div class="flex items-center gap-3">
+                <h1 class="text-lg font-extrabold tracking-tight text-white flex items-center gap-2">
+                    🏀 Shia City Draftboard
+                </h1>
+                <button onclick="undoLastPick()" class="bg-rose-600/80 hover:bg-rose-600 text-white text-xs px-2.5 py-1 rounded font-semibold transition flex items-center gap-1 shadow-sm">
+                    ↩️ Undo Pick
+                </button>
+            </div>
+
+            <!-- Timer Widget -->
+            <div class="flex items-center gap-3 bg-slate-900/80 px-3 py-1 rounded-md border border-slate-700/80">
+                <div class="text-center">
+                    <span id="timer-display" class="text-lg font-mono font-bold text-red-400">01:00</span>
+                </div>
+                <div class="flex gap-1">
+                    <button onclick="toggleTimer()" id="timer-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-1 rounded font-semibold transition">Start</button>
+                    <button onclick="resetTimer()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs px-2 py-1 rounded font-semibold transition">Reset</button>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <div>
+                    <span class="text-[10px] text-slate-400 block uppercase tracking-wider">Round</span>
+                    <span id="current-round" class="text-sm font-bold text-amber-400">Round 1</span>
+                </div>
+                <div class="border-r border-slate-700"></div>
+                <div class="pl-1">
+                    <span class="text-[10px] text-slate-400 block uppercase tracking-wider">On The Clock</span>
+                    <span id="current-pick-owner" class="text-sm font-bold text-emerald-400">Hussan Ali</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Draft Grid Section (Compact) -->
+        <div class="bg-slate-800 rounded-lg border border-slate-700 shadow-md overflow-hidden shrink-0">
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-left text-xs">
+                    <thead>
+                        <tr id="header-row" class="bg-slate-900/90 text-slate-300 border-b border-slate-700 uppercase tracking-wider">
+                            <th class="p-1.5 border-r border-slate-700 w-16 text-center">Round</th>
+                            <!-- Dynamically injected managers -->
+                        </tr>
+                    </thead>
+                    <tbody id="grid-body" class="divide-y divide-slate-700/50">
+                        <!-- Dynamically injected grid rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Player Pool Section (With Search Bar) -->
+        <div class="bg-slate-800 rounded-lg border border-slate-700 shadow-md p-3 flex flex-col flex-1 min-h-0">
+            <div class="flex items-center justify-between mb-2 shrink-0 gap-4">
+                <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                    <span>Available Player Pool</span>
+                    <span class="text-[11px] font-normal text-slate-400">Click to Draft</span>
+                </h2>
+                <!-- Search Bar -->
+                <div class="relative w-64">
+                    <input type="text" id="player-search" oninput="renderPlayerPool()" placeholder="Search available players..." 
+                        class="w-full bg-slate-900 border border-slate-700 rounded-md px-3 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-slate-500">
+                </div>
+            </div>
+            <div id="player-pool" class="grid grid-cols-5 gap-2 flex-1 min-h-0">
+                <!-- Dynamically injected rating columns -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script to handle draft state, UI, Timer, Undo, Search, and Sound Effect -->
+    <script>
+        const managers = [
+            "Hussan Ali", "Ali Abbas Naqvi", "Zain Jafri", "Imran Ladak", 
+            "Syed Daniyal", "Danesh Jafri", "Mo Naqvi", "Hasnan Zaidi", 
+            "Ali Zaidi", "Taqi Hussain"
+        ];
+
+        const totalRounds = 5;
+
+        // Custom rounding function: .1 to .4 rounds down, .5 to .9 rounds up
+        function customRound(val) {
+            if (val === null || val === undefined) return null;
+            let decimal = val - Math.floor(val);
+            return decimal >= 0.5 ? Math.ceil(val) : Math.floor(val);
+        }
+
+        const playerPoolData = {
+            5: [
+                { name: "Ayaz Haider", pts: 24.3, reb: 19.0, stk: 3.7, tpm: 2.3 },
+                { name: "Mohsin Jaffery", pts: 25.3, reb: 15.4, stk: 3.3, tpm: 2.7 },
+                { name: "Hadi Naqvi", pts: 27.0, reb: 10.5, stk: 2.5, tpm: 5.8 },
+                { name: "Zulfiqar Rizvi", pts: 31.1, reb: 6.0, stk: 1.4, tpm: 4.7 },
+                { name: "Abbas Aslam", pts: 28.5, reb: 6.0, stk: 1.9, tpm: 5.4 },
+                { name: "Ammad Mehdi", pts: 25.6, reb: 7.6, stk: 0.7, tpm: 4.6 },
+                { name: "Ali Ladak", pts: 21.4, reb: 12.4, stk: 1.7, tpm: 2.0 },
+                { name: "Adil Abidi", pts: 17.3, reb: 17.0, stk: 1.3, tpm: 0.2 }
+            ],
+            4: [
+                { name: "Murtaza Hussain", pts: 16.7, reb: 9.4, stk: 2.2, tpm: 2.2 },
+                { name: "Hamza Syed", pts: 17.2, reb: 8.6, stk: 3.0, tpm: 1.0 },
+                { name: "Hashim Shah", pts: 18.3, reb: 6.7, stk: 0.7, tpm: 2.6 },
+                { name: "Hussain Khan", pts: 13.4, reb: 9.1, stk: 2.1, tpm: 1.8 },
+                { name: "Hamza Rizvi", pts: 18.3, reb: 2.2, stk: 1.8, tpm: 4.3 },
+                { name: "Zulfiqar Hussain", pts: 12.7, reb: 9.8, stk: 1.3, tpm: 1.2 },
+                { name: "Imran Zaidi", pts: 10.7, reb: 13.1, stk: 1.6, tpm: 0.1 },
+                { name: "Ali Abidi", pts: 9.1, reb: 11.1, stk: 2.3, tpm: 0.8 },
+                { name: "Rehan Azam", pts: 5.3, reb: 14.4, stk: 2.2, tpm: 0.6 },
+                { name: "Tamseel Raza", pts: 13.2, reb: 4.6, stk: 0.6, tpm: 4.0 },
+                { name: "AJ Hussain", pts: 11.0, reb: 7.0, stk: 0.5, tpm: 3.3 },
+                { name: "Sibtain Raza", pts: null, reb: null, stk: null, tpm: null },
+                { name: "Syed Ale Hassan", pts: null, reb: null, stk: null, tpm: null },
+                { name: "Turab Kazim", pts: null, reb: null, stk: null, tpm: null }
+            ],
+            3: [
+                { name: "Mohammad Zaidi", pts: 4.9, reb: 12.4, stk: 1.8, tpm: 1.0 },
+                { name: "Asim Abidi", pts: 10.6, reb: 6.9, stk: 2.0, tpm: 1.3 },
+                { name: "Syed Noeshare", pts: 8.9, reb: 7.1, stk: 2.7, tpm: 0.6 },
+                { name: "Hasan Ahmad", pts: 7.6, reb: 6.3, stk: 2.4, tpm: 1.5 },
+                { name: "Ali Naqvi", pts: 7.3, reb: 4.4, stk: 2.0, tpm: 3.0 },
+                { name: "Mohammad Naqvi", pts: 5.7, reb: 11.0, stk: 0.8, tpm: 0.2 },
+                { name: "Zain Hussain", pts: 5.6, reb: 7.4, stk: 0.9, tpm: 0.9 },
+                { name: "Zain Ali", pts: 9.0, reb: 3.0, stk: 1.0, tpm: 2.0 },
+                { name: "Hani Zahid", pts: null, reb: null, stk: null, tpm: null },
+                { name: "Zain Ali Shah", pts: null, reb: null, stk: null, tpm: null },
+                { name: "Hassan Mujtaba Kazmi", pts: null, reb: null, stk: null, tpm: null },
+                { name: "Abbas Naqvi", pts: null, reb: null, stk: null, tpm: null },
+                { name: "Abbas Syed", pts: null, reb: null, stk: null, tpm: null },
+                { name: "Hashir Ali", pts: null, reb: null, stk: null, tpm: null }
+            ],
+            2: [
+                { name: "Abbas Rizvi", pts: 6.3, reb: 5.5, stk: 0.2, tpm: 1.5 },
+                { name: "Ameer Abidi", pts: 2.7, reb: 9.0, stk: 1.0, tpm: 0.0 },
+                { name: "Turab Hussain", pts: 5.0, reb: 3.5, stk: 0.8, tpm: 0.5 },
+                { name: "Hyder Khan", pts: 3.4, reb: 3.8, stk: 1.0, tpm: 0.2 },
+                { name: "Shan Ali", pts: 2.5, reb: 4.2, stk: 0.9, tpm: 0.4 },
+                { name: "Shayan Jafri", pts: 2.9, reb: 2.3, stk: 1.3, tpm: 0.9 },
+                { name: "Zeeshan Hussain", pts: 1.1, reb: 2.4, stk: 1.0, tpm: 0.0 },
+                { name: "Irtaza Hassan", pts: null, reb: null, stk: null, tpm: null },
+                { name: "Ali Asghar Rizvi", pts: null, reb: null, stk: null, tpm: null },
+                { name: "Jazib Mustafa", pts: null, reb: null, stk: null, tpm: null },
+                { name: "Hussain Shah", pts: null, reb: null, stk: null, tpm: null }
+            ],
+            1: [
+                { name: "Kumail Jafri", pts: 1.6, reb: 1.4, stk: 0.0, tpm: 0.3 },
+                { name: "Abbas Khan", pts: 0.0, reb: 1.6, stk: 0.4, tpm: 0.0 },
+                { name: "Kushnood Rizvi", pts: 0.0, reb: 0.7, stk: 0.5, tpm: 0.0 }
+            ]
+        };
+
+        let availablePlayers = [];
+        for (let rating in playerPoolData) {
+            playerPoolData[rating].forEach(p => {
+                availablePlayers.push({ 
+                    name: p.name, 
+                    rating: Number(rating), 
+                    pts: customRound(p.pts), 
+                    reb: customRound(p.reb), 
+                    stk: customRound(p.stk), 
+                    tpm: customRound(p.tpm) 
+                });
+            });
+        }
+
+        let draftedPicks = {};
+        let currentPickNumber = 1;
+
+        const tierStyles = {
+            5: "bg-red-500/20 text-red-300 border-red-500/40 hover:bg-red-500/30",
+            4: "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30",
+            3: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-300/30",
+            2: "bg-blue-500/20 text-blue-300 border-blue-500/40 hover:bg-blue-500/30",
+            1: "bg-purple-500/20 text-purple-300 border-purple-500/40 hover:bg-purple-500/30"
+        };
+
+        let timeLeft = 60;
+        let timerInterval = null;
+        let isTimerRunning = false;
+
+        function playBuzzerSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15);
+                
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.4);
+            } catch (e) {}
+        }
+
+        function formatTime(seconds) {
+            let mins = Math.floor(seconds / 60);
+            let secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer-display').innerText = formatTime(timeLeft);
+        }
+
+        function startTimer() {
+            if (isTimerRunning) return;
+            isTimerRunning = true;
+            document.getElementById('timer-btn').innerText = "Pause";
+            document.getElementById('timer-btn').className = "bg-amber-600 hover:bg-amber-500 text-white text-xs px-2.5 py-1 rounded font-semibold transition";
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    isTimerRunning = false;
+                    document.getElementById('timer-btn').innerText = "Start";
+                    document.getElementById('timer-btn').className = "bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-1 rounded font-semibold transition";
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (!isTimerRunning) return;
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            document.getElementById('timer-btn').innerText = "Start";
+            document.getElementById('timer-btn').className = "bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-1 rounded font-semibold transition";
+        }
+
+        function toggleTimer() {
+            if (isTimerRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timeLeft = 60;
+            updateTimerDisplay();
+            let btn = document.getElementById('timer-btn');
+            btn.innerText = "Start";
+            btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-2.5 py-1 rounded font-semibold transition";
+        }
+
+        function getManagerIndexForPick(pickNum) {
+            let round = Math.floor((pickNum - 1) / managers.length);
+            let posInRound = (pickNum - 1) % managers.length;
+            return (round % 2 === 0) ? posInRound : (managers.length - 1 - posInRound);
+        }
+
+        function render() {
+            renderHeader();
+            renderGrid();
+            renderStatus();
+            renderPlayerPool();
+        }
+
+        function renderHeader() {
+            let html = `<th class="p-1.5 border-r border-slate-700 w-16 text-center">Round</th>`;
+            let activeManagerIdx = (currentPickNumber <= managers.length * totalRounds) ? getManagerIndexForPick(currentPickNumber) : -1;
+
+            managers.forEach((m, idx) => {
+                let isOnClock = (idx === activeManagerIdx);
+                let headerBg = isOnClock ? "bg-slate-800 border-b-2 border-emerald-500 text-emerald-300 font-bold" : "";
+                
+                html += `<th class="p-1.5 border-r border-slate-700 text-center ${headerBg}">
+                    <div class="flex flex-col items-center">
+                        <span>${idx + 1}. ${m}</span>
+                        ${isOnClock ? '<span class="text-[9px] uppercase tracking-wider text-emerald-400 font-extrabold animate-pulse mt-0.5">On the clock</span>' : ''}
+                    </div>
+                </th>`;
+            });
+            document.getElementById('header-row').innerHTML = html;
+        }
+
+        function renderGrid() {
+            let html = '';
+            let activeRound = Math.floor((currentPickNumber - 1) / managers.length) + 1;
+            let activeManagerIdx = getManagerIndexForPick(currentPickNumber);
+
+            for (let r = 1; r <= totalRounds; r++) {
+                let isCurrentRound = (r === activeRound && currentPickNumber <= managers.length * totalRounds);
+                html += `<tr class="border-b border-slate-700/50">`;
+                html += `<td class="p-1.5 font-semibold bg-slate-900/40 border-r border-slate-700 text-center text-slate-400">R${r}</td>`;
+                
+                for (let mIdx = 0; mIdx < managers.length; mIdx++) {
+                    let key = `${r}-${mIdx}`;
+                    let pick = draftedPicks[key];
+                    let isTargetCell = (isCurrentRound && mIdx === activeManagerIdx);
+                    
+                    if (pick) {
+                        html += `<td class="p-1 border-r border-slate-700/50 text-center">
+                            <div class="rounded border px-1 py-1 font-medium text-[11px] flex flex-col justify-center ${tierStyles[pick.rating]}">
+                                <div class="flex justify-between items-center leading-none mb-0.5">
+                                    <span class="text-[8px] opacity-75 font-mono">${pick.round}.${pick.pickInRound}</span>
+                                </div>
+                                <div class="text-center w-full font-bold whitespace-nowrap overflow-hidden text-ellipsis">${pick.name}</div>
+                            </div>
+                        </td>`;
+                    } else {
+                        html += `<td class="p-1 border-r border-slate-700/50 text-center text-slate-600 text-[11px] italic">Open</td>`;
+                    }
+                }
+                html += `</tr>`;
+            }
+            document.getElementById('grid-body').innerHTML = html;
+        }
+
+        function renderStatus() {
+            if (currentPickNumber > managers.length * totalRounds) {
+                document.getElementById('current-round').innerText = "Complete";
+                document.getElementById('current-pick-owner').innerText = "Finished!";
+                return;
+            }
+            let round = Math.floor((currentPickNumber - 1) / managers.length) + 1;
+            let mIdx = getManagerIndexForPick(currentPickNumber);
+            
+            document.getElementById('current-round').innerText = `Round ${round}`;
+            document.getElementById('current-pick-owner').innerText = managers[mIdx];
+        }
+
+        function renderPlayerPool() {
+            let container = document.getElementById('player-pool');
+            container.innerHTML = '';
+
+            let searchQuery = document.getElementById('player-search') ? document.getElementById('player-search').value.toLowerCase().trim() : '';
+
+            [5, 4, 3, 2, 1].forEach(rating => {
+                let playersInTier = availablePlayers.filter(p => {
+                    let matchesTier = p.rating === rating;
+                    let matchesSearch = p.name.toLowerCase().includes(searchQuery);
+                    return matchesTier && matchesSearch;
+                });
+
+                playersInTier.sort((a, b) => a.name.localeCompare(b.name));
+                
+                let colHtml = `
+                    <div class="bg-slate-900/60 rounded-md p-2 border border-slate-700 flex flex-col h-full min-h-0">
+                        <div class="text-center font-bold pb-1 mb-1 border-b border-slate-700 text-slate-300 text-[11px] shrink-0">
+                            Tier ${rating} <span class="font-normal text-slate-500">(${playersInTier.length})</span>
+                        </div>
+                        <div class="flex flex-col gap-1 overflow-y-auto pr-1 flex-1">
+                `;
+
+                if (playersInTier.length === 0) {
+                    colHtml += `<div class="text-[10px] text-slate-500 text-center italic py-2">No players</div>`;
+                } else {
+                    playersInTier.forEach(player => {
+                        let statsHtml = player.pts !== null ? 
+                            `<span class="text-[9px] opacity-75 font-mono shrink-0">${player.pts}p ${player.reb}r ${player.stk}s ${player.tpm}t</span>` : '';
+
+                        colHtml += `
+                            <button onclick="draftPlayer('${player.name}')" 
+                                class="text-left px-1.5 py-1 rounded border text-[11px] font-medium transition-all duration-150 shadow-sm shrink-0 flex items-center justify-between gap-1.5 ${tierStyles[player.rating]}">
+                                <span class="font-bold whitespace-nowrap overflow-hidden text-ellipsis min-w-0">${player.name}</span>
+                                ${statsHtml}
+                            </button>
+                        `;
+                    });
+                }
+
+                colHtml += `</div></div>`;
+                container.innerHTML += colHtml;
+            });
+        }
+
+        function draftPlayer(playerName) {
+            if (currentPickNumber > managers.length * totalRounds) return;
+
+            let pIndex = availablePlayers.findIndex(p => p.name === playerName);
+            if (pIndex === -1) return;
+            let player = availablePlayers.splice(pIndex, 1)[0];
+
+            let round = Math.floor((currentPickNumber - 1) / managers.length) + 1;
+            let posInRound = (currentPickNumber - 1) % managers.length;
+            let pickInRound = (round % 2 === 0) ? (posInRound + 1) : (posInRound + 1);
+
+            draftedPicks[`${round}-${getManagerIndexForPick(currentPickNumber)}`] = {
+                ...player,
+                round: round,
+                pickInRound: pickInRound
+            };
+            currentPickNumber++;
+
+            // Reset timer back to 60s and automatically start it for the next manager on the clock
+            resetTimer();
+            startTimer();
+            
+            playBuzzerSound();
+            render();
+        }
+
+        function undoLastPick() {
+            if (currentPickNumber <= 1) return;
+
+            currentPickNumber--;
+            let round = Math.floor((currentPickNumber - 1) / managers.length) + 1;
+            let mIdx = getManagerIndexForPick(currentPickNumber);
+            let key = `${round}-${mIdx}`;
+
+            let player = draftedPicks[key];
+            if (player) {
+                availablePlayers.push({ name: player.name, rating: player.rating, pts: player.pts, reb: player.reb, stk: player.stk, tpm: player.tpm });
+                delete draftedPicks[key];
+            }
+
+            resetTimer();
+            startTimer();
+            
+            playBuzzerSound();
+            render();
+        }
+
+        render();
+    </script>
+</body>
+</html>
