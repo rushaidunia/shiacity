@@ -304,53 +304,25 @@
                 globalSchedule = (result.record.schedule && result.record.schedule.length > 0) ? result.record.schedule : defaultSchedule;
                 globalBoxscores = result.record.boxscores || {};
                 
-                initSchedulePage();
+                populateDateDropdown();
+                renderSchedule(globalSchedule);
             } catch (e) {
                 console.error("Error loading cloud data, falling back to default", e);
                 globalSchedule = defaultSchedule;
                 globalBoxscores = {};
-                initSchedulePage();
+                populateDateDropdown();
+                renderSchedule(globalSchedule);
             }
         }
 
-        function getScheduleData() {
-            if (!globalSchedule || globalSchedule.length === 0) return defaultSchedule;
-            return globalSchedule.map(week => {
-                week.games.forEach(g => {
-                    function cleanScore(val) {
-                        if (val === undefined || val === null) return null;
-                        let strVal = String(val).trim();
-                        if (strVal === '' || strVal === '-' || strVal.toLowerCase() === 'undefined' || strVal.toLowerCase() === 'nan') return null;
-                        let num = Number(strVal);
-                        return Number.isNaN(num) ? null : num;
-                    }
-                    g.s1 = cleanScore(g.s1);
-                    g.s2 = cleanScore(g.s2);
-                });
-                return week;
-            });
-        }
-
-        function getStoredGameBoxScores() {
-            return globalBoxscores || {};
-        }
-
-        let scheduleData = [];
-
-        function initSchedulePage() {
-            scheduleData = getScheduleData();
-            initDateDropdown();
-            applyFilters();
-        }
-
-        function initDateDropdown() {
-            const select = document.getElementById('filter-date');
-            select.innerHTML = '<option value="">All Dates</option>';
-            scheduleData.forEach(week => {
+        function populateDateDropdown() {
+            const dateSelect = document.getElementById('filter-date');
+            dateSelect.innerHTML = '<option value="">All Dates</option>';
+            globalSchedule.forEach(week => {
                 let opt = document.createElement('option');
                 opt.value = week.date;
                 opt.innerText = week.date;
-                select.appendChild(opt);
+                dateSelect.appendChild(opt);
             });
         }
 
@@ -360,106 +332,29 @@
             const courtQuery = document.getElementById('filter-court').value;
             const timeQuery = document.getElementById('filter-time').value;
 
-            const container = document.getElementById('games-container');
-            container.innerHTML = '';
+            let filteredWeeks = [];
+            let totalMatchingGames = 0;
 
-            let totalMatches = 0;
-
-            scheduleData.forEach((week, wIdx) => {
+            globalSchedule.forEach((week, wIdx) => {
                 if (dateQuery && week.date !== dateQuery) return;
 
-                let filteredGamesWithIndices = [];
+                let matchingGames = [];
                 week.games.forEach((game, gIdx) => {
-                    let matchTeam = !teamQuery || game.team1.toLowerCase().includes(teamQuery) || game.team2.toLowerCase().includes(teamQuery);
-                    let matchCourt = !courtQuery || game.court === courtQuery;
-                    let matchTime = !timeQuery || game.time === timeQuery;
-                    if (matchTeam && matchCourt && matchTime) {
-                        filteredGamesWithIndices.push({ game, gIdx });
-                    }
+                    if (courtQuery && game.court !== courtQuery) return;
+                    if (timeQuery && game.time !== timeQuery) return;
+                    if (teamQuery && !game.team1.toLowerCase().includes(teamQuery) && !game.team2.toLowerCase().includes(teamQuery)) return;
+
+                    matchingGames.push({ ...game, originalWIdx: wIdx, originalGIdx: gIdx });
+                    totalMatchingGames++;
                 });
 
-                if (filteredGamesWithIndices.length > 0) {
-                    let dateHeader = document.createElement('div');
-                    dateHeader.className = "text-xs font-bold text-orange-400 tracking-wider uppercase mt-4 mb-2 flex items-center gap-2";
-                    dateHeader.innerHTML = `<span>📅</span> ${week.date}`;
-                    container.appendChild(dateHeader);
-
-                    filteredGamesWithIndices.forEach(({ game, gIdx }) => {
-                        totalMatches++;
-                        let card = document.createElement('div');
-                        card.className = "bg-zinc-900 border border-zinc-800 hover:border-orange-500/50 transition rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-md cursor-pointer";
-                        card.onclick = () => openBoxScore(wIdx, gIdx);
-                        
-                        let hasScore = (game.s1 !== null && game.s2 !== null);
-                        let centerBadgeHTML = '';
-                        let team1DisplayHTML = '';
-                        let team2DisplayHTML = '';
-
-                        if (hasScore) {
-                            let s1 = game.s1;
-                            let s2 = game.s2;
-                            let t1Win = s1 > s2;
-                            let t2Win = s2 > s1;
-
-                            let t1Color = t1Win ? 'text-emerald-400 font-bold' : (t2Win ? 'text-rose-400 font-medium' : 'text-zinc-100 font-bold');
-                            let t1Badge = t1Win ? `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">W</span>` : (t2Win ? `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">L</span>` : '');
-
-                            let t2Color = t2Win ? 'text-emerald-400 font-bold' : (t1Win ? 'text-rose-400 font-medium' : 'text-zinc-100 font-bold');
-                            let t2Badge = t2Win ? `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">W</span>` : (t1Win ? `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">L</span>` : '');
-
-                            team1DisplayHTML = `
-                                <div class="flex items-center justify-end gap-2 w-[42%]">
-                                    <span class="text-xs font-mono font-semibold ${t1Color}">${s1}</span>
-                                    ${t1Badge}
-                                    <span class="${t1Color} text-sm truncate" title="${game.team1}">${game.team1}</span>
-                                </div>
-                            `;
-
-                            team2DisplayHTML = `
-                                <div class="flex items-center justify-start gap-2 w-[42%]">
-                                    <span class="${t2Color} text-sm truncate" title="${game.team2}">${game.team2}</span>
-                                    ${t2Badge}
-                                    <span class="text-xs font-mono font-semibold ${t2Color}">${s2}</span>
-                                </div>
-                            `;
-
-                            centerBadgeHTML = `<span class="text-zinc-500 font-extrabold text-[10px] bg-zinc-950 px-2.5 py-1 rounded-md border border-zinc-800">FINAL</span>`;
-                        } else {
-                            team1DisplayHTML = `<span class="font-bold text-zinc-100 text-sm text-right w-[42%] truncate" title="${game.team1}">${game.team1}</span>`;
-                            team2DisplayHTML = `<span class="font-bold text-zinc-100 text-sm w-[42%] truncate" title="${game.team2}">${game.team2}</span>`;
-                            centerBadgeHTML = `<span class="text-orange-500 font-extrabold text-[10px] bg-zinc-950 px-2.5 py-1 rounded-md border border-zinc-800">VS</span>`;
-                        }
-
-                        card.innerHTML = `
-                            <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-                                <span class="bg-orange-500/10 text-orange-400 font-mono text-[11px] px-2.5 py-1 rounded-lg border border-orange-500/20 font-semibold">${game.court}</span>
-                                <span class="text-zinc-400 text-xs font-medium sm:hidden">${game.time}</span>
-                            </div>
-                            
-                            <div class="flex items-center justify-center gap-3 flex-1 w-full sm:w-auto my-1 sm:my-0">
-                                ${team1DisplayHTML}
-                                ${centerBadgeHTML}
-                                ${team2DisplayHTML}
-                            </div>
-
-                            <div class="hidden sm:flex items-center gap-3 text-right">
-                                <span class="text-zinc-400 font-mono text-xs font-medium">${game.time}</span>
-                                <span class="text-[11px] font-semibold text-orange-400 hover:text-orange-300 bg-orange-500/10 px-2.5 py-1 rounded-lg border border-orange-500/25 transition">📋 Box Score</span>
-                            </div>
-                        `;
-                        container.appendChild(card);
-                    });
+                if (matchingGames.length > 0) {
+                    filteredWeeks.push({ date: week.date, games: matchingGames });
                 }
             });
 
-            document.getElementById('result-count').innerText = `Showing ${totalMatches} matching games`;
-            if (totalMatches === 0) {
-                container.innerHTML = `
-                    <div class="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-8 text-center text-zinc-500 text-xs italic">
-                        No matches found matching your filters.
-                    </div>
-                `;
-            }
+            document.getElementById('result-count').innerText = `Showing ${totalMatchingGames} matching matchup${totalMatchingGames === 1 ? '' : 's'}`;
+            renderSchedule(filteredWeeks);
         }
 
         function resetFilters() {
@@ -467,45 +362,91 @@
             document.getElementById('filter-date').value = '';
             document.getElementById('filter-court').value = '';
             document.getElementById('filter-time').value = '';
-            applyFilters();
+            document.getElementById('result-count').innerText = 'Showing all matchups';
+            renderSchedule(globalSchedule);
         }
 
-        let currentModalWeek = null;
-        let currentModalGame = null;
+        function renderSchedule(scheduleToRender) {
+            const container = document.getElementById('games-container');
+            container.innerHTML = '';
 
-        function openBoxScore(wIdx, gIdx) {
-            currentModalWeek = wIdx;
-            currentModalGame = gIdx;
-
-            const game = scheduleData[wIdx].games[gIdx];
-            const hasScore = (game.s1 !== null && game.s2 !== null);
-
-            document.getElementById('modal-match-title').innerText = `${game.team1} VS ${game.team2}`;
-            document.getElementById('modal-match-subtitle').innerText = `${scheduleData[wIdx].date} | ${game.court} (${game.time})`;
-
-            document.getElementById('modal-team1-name').innerText = game.team1.toUpperCase();
-            document.getElementById('modal-team2-name').innerText = game.team2.toUpperCase();
-
-            const t1Badge = document.getElementById('modal-team1-score-badge');
-            const t2Badge = document.getElementById('modal-team2-score-badge');
-
-            if (hasScore) {
-                let t1Win = game.s1 > game.s2;
-                t1Badge.className = `text-[11px] font-bold px-3 py-1 rounded-lg border font-mono ${t1Win ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`;
-                t1Badge.innerText = `Final Score: ${game.s1}`;
-                t1Badge.style.display = 'inline-block';
-
-                let t2Win = game.s2 > game.s1;
-                t2Badge.className = `text-[11px] font-bold px-3 py-1 rounded-lg border font-mono ${t2Win ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`;
-                t2Badge.innerText = `Final Score: ${game.s2}`;
-                t2Badge.style.display = 'inline-block';
-            } else {
-                t1Badge.style.display = 'none';
-                t2Badge.style.display = 'none';
+            if (scheduleToRender.length === 0) {
+                container.innerHTML = '<div class="text-xs text-zinc-500 py-8 text-center bg-zinc-900/40 border border-zinc-800/60 rounded-2xl">No matchups found matching your filters.</div>';
+                return;
             }
 
-            renderTeamPlayersInModal('team1-players-table', game.team1, wIdx, gIdx);
-            renderTeamPlayersInModal('team2-players-table', game.team2, wIdx, gIdx);
+            scheduleToRender.forEach(week => {
+                let weekDiv = document.createElement('div');
+                weekDiv.className = 'bg-zinc-900/40 border border-zinc-800/60 rounded-2xl p-5 shadow-xl backdrop-blur-md flex flex-col gap-4';
+                
+                let headerHTML = `<div class="flex items-center justify-between border-b border-zinc-800/60 pb-3">
+                    <h2 class="text-xs font-extrabold text-orange-400 uppercase tracking-widest">${week.date}</h2>
+                    <span class="text-[11px] text-zinc-500 font-medium">${week.games.length} Game${week.games.length === 1 ? '' : 's'}</span>
+                </div>`;
+
+                let gamesHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
+
+                week.games.forEach(game => {
+                    let wIdx = game.originalWIdx !== undefined ? game.originalWIdx : globalSchedule.findIndex(w => w.date === week.date);
+                    let gIdx = game.originalGIdx !== undefined ? game.originalGIdx : globalSchedule[wIdx].games.findIndex(g => g.team1 === game.team1 && g.team2 === game.team2 && g.time === game.time);
+
+                    let s1Display = (game.s1 !== null && game.s1 !== undefined && !Number.isNaN(game.s1)) ? game.s1 : '-';
+                    let s2Display = (game.s2 !== null && game.s2 !== undefined && !Number.isNaN(game.s2)) ? game.s2 : '-';
+
+                    let isCompleted = (game.s1 !== null && game.s2 !== null && game.s1 !== '' && game.s2 !== '');
+                    let t1Class = isCompleted && Number(game.s1) > Number(game.s2) ? 'text-emerald-400 font-extrabold' : 'text-zinc-200 font-bold';
+                    let t2Class = isCompleted && Number(game.s2) > Number(game.s1) ? 'text-emerald-400 font-extrabold' : 'text-zinc-200 font-bold';
+
+                    gamesHTML += `
+                    <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3.5 flex flex-col gap-3 hover:border-zinc-700 transition cursor-pointer group" onclick="openBoxScoreModal(${wIdx}, ${gIdx})">
+                        <div class="flex justify-between items-center text-[11px] text-zinc-400 font-medium">
+                            <span class="bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 text-zinc-300">${game.court}</span>
+                            <span class="font-mono">${game.time}</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-2 px-2">
+                            <span class="text-xs ${t1Class} truncate flex-1 text-right">${game.team1}</span>
+                            <div class="bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-lg font-mono text-xs font-bold text-zinc-100 tracking-wider flex items-center gap-1.5 shadow-inner">
+                                <span>${s1Display}</span>
+                                <span class="text-zinc-600">-</span>
+                                <span>${s2Display}</span>
+                            </div>
+                            <span class="text-xs ${t2Class} truncate flex-1 text-left">${game.team2}</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-zinc-900/80 text-[10px]">
+                            <span class="text-zinc-500 italic">${isCompleted ? 'Final Box Score Available' : 'Upcoming Matchup'}</span>
+                            <span class="text-orange-400 font-semibold group-hover:underline">View Box Score →</span>
+                        </div>
+                    </div>`;
+                });
+
+                gamesHTML += `</div>`;
+                weekDiv.innerHTML = headerHTML + gamesHTML;
+                container.appendChild(weekDiv);
+            });
+        }
+
+        function openBoxScoreModal(wIdx, gIdx) {
+            const game = globalSchedule[wIdx].games[gIdx];
+
+            document.getElementById('modal-match-title').innerText = `${game.team1} vs ${game.team2}`;
+            document.getElementById('modal-match-subtitle').innerText = `${globalSchedule[wIdx].date} | ${game.court} (${game.time})`;
+
+            document.getElementById('modal-team1-name').innerText = game.team1;
+            document.getElementById('modal-team2-name').innerText = game.team2;
+
+            let s1Display = (game.s1 !== null && game.s1 !== undefined && !Number.isNaN(game.s1)) ? game.s1 : '-';
+            let s2Display = (game.s2 !== null && game.s2 !== undefined && !Number.isNaN(game.s2)) ? game.s2 : '-';
+
+            const t1Badge = document.getElementById('modal-team1-score-badge');
+            t1Badge.innerText = `Final Score: ${s1Display}`;
+            t1Badge.className = `text-[11px] font-bold px-3 py-1 rounded-lg border font-mono ${s1Display !== '-' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}`;
+
+            const t2Badge = document.getElementById('modal-team2-score-badge');
+            t2Badge.innerText = `Final Score: ${s2Display}`;
+            t2Badge.className = `text-[11px] font-bold px-3 py-1 rounded-lg border font-mono ${s2Display !== '-' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-zinc-900 border-zinc-800 text-zinc-400'}`;
+
+            renderModalPlayers('team1-players-table', game.team1, wIdx, gIdx);
+            renderModalPlayers('team2-players-table', game.team2, wIdx, gIdx);
 
             document.getElementById('boxscore-modal').classList.remove('hidden');
         }
@@ -514,7 +455,7 @@
             document.getElementById('boxscore-modal').classList.add('hidden');
         }
 
-        function renderTeamPlayersInModal(tableId, teamName, wIdx, gIdx) {
+        function renderModalPlayers(tableId, teamName, wIdx, gIdx) {
             const tbody = document.getElementById(tableId);
             tbody.innerHTML = '';
 
@@ -606,39 +547,36 @@
             let teamObj = leagueData.find(t => t.teamName.toLowerCase() === teamName.toLowerCase());
 
             if (!teamObj || !teamObj.players) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-xs text-zinc-500 italic">No player stats available for this team.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="py-3 px-3 text-zinc-500 italic">No player roster found.</td></tr>`;
                 return;
             }
 
-            const allBoxScores = getStoredGameBoxScores();
             const gameKey = `w${wIdx}_g${gIdx}`;
-            const gameBox = allBoxScores[gameKey] || {};
+            const gameBox = globalBoxscores[gameKey] || {};
             const teamBox = gameBox[teamName] || {};
 
-            let html = '';
             teamObj.players.forEach(p => {
-                let pStats = teamBox[p.name] || {};
-                let ptsVal = (pStats.pts !== undefined && pStats.pts !== null && pStats.pts !== '') ? pStats.pts : '-';
-                let rebVal = (pStats.reb !== undefined && pStats.reb !== null && pStats.reb !== '') ? pStats.reb : '-';
-                let stlVal = (pStats.stl !== undefined && pStats.stl !== null && pStats.stl !== '') ? pStats.stl : '-';
-                let blkVal = (pStats.blk !== undefined && pStats.blk !== null && pStats.blk !== '') ? pStats.blk : '-';
-                let tpmVal = (pStats.tpm !== undefined && pStats.tpm !== null && pStats.tpm !== '') ? pStats.tpm : '-';
+                let stats = teamBox[p.name] || {};
+                let pts = (stats.pts !== undefined && stats.pts !== null && stats.pts !== '') ? stats.pts : '-';
+                let reb = (stats.reb !== undefined && stats.reb !== null && stats.reb !== '') ? stats.reb : '-';
+                let stl = (stats.stl !== undefined && stats.stl !== null && stats.stl !== '') ? stats.stl : '-';
+                let blk = (stats.blk !== undefined && stats.blk !== null && stats.blk !== '') ? stats.blk : '-';
+                let tpm = (stats.tpm !== undefined && stats.tpm !== null && stats.tpm !== '') ? stats.tpm : '-';
 
-                html += `
-                <tr class="hover:bg-zinc-900/40 transition">
-                    <td class="py-3 px-3 text-xs font-semibold text-zinc-200">${p.name}</td>
-                    <td class="py-3 px-3 text-center text-xs font-mono font-bold text-zinc-100">${ptsVal}</td>
-                    <td class="py-3 px-3 text-center text-xs font-mono text-zinc-300">${rebVal}</td>
-                    <td class="py-3 px-3 text-center text-xs font-mono text-zinc-300">${stlVal}</td>
-                    <td class="py-3 px-3 text-center text-xs font-mono text-zinc-300">${blkVal}</td>
-                    <td class="py-3 px-3 text-center text-xs font-mono text-zinc-300">${tpmVal}</td>
-                </tr>`;
+                let row = document.createElement('tr');
+                row.className = "hover:bg-zinc-800/30 transition-colors";
+                row.innerHTML = `
+                    <td class="py-2.5 px-3 font-semibold text-zinc-200">${p.name}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-zinc-300">${pts}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-zinc-400">${reb}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-zinc-400">${stl}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-zinc-400">${blk}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-zinc-400">${tpm}</td>
+                `;
+                tbody.appendChild(row);
             });
-
-            tbody.innerHTML = html;
         }
 
-        // Initialize on load
         loadCloudData();
     </script>
 </body>
