@@ -90,7 +90,9 @@
             <button onclick="resetFilters()" class="text-xs text-orange-400 hover:text-orange-300 font-medium transition underline underline-offset-4">Reset Filters</button>
         </div>
 
-        <div id="games-container" class="flex flex-col gap-3"></div>
+        <div id="games-container" class="flex flex-col gap-3">
+            <div class="text-xs text-zinc-500 py-8 text-center">Loading schedule from cloud database...</div>
+        </div>
 
         <!-- Postseason & Playoff Roadmap Section -->
         <div class="mt-4 bg-zinc-900 border border-zinc-800/80 rounded-2xl p-6 shadow-xl shadow-black/40 backdrop-blur-sm flex flex-col gap-4">
@@ -192,7 +194,14 @@
     </footer>
 
     <script>
-        const rawSchedule = [
+        // --- JSONBin.io Credentials ---
+        const BIN_ID = '6a821676f5f4af5e291deef6';
+        const API_KEY = '$2a$10$SoabreyJqABP0d.tfFL.8O4m7jksb.mEIEQrTPqILtEztd.PkRtd.';
+
+        let globalSchedule = [];
+        let globalBoxscores = {};
+
+        const defaultSchedule = [
             {
                 date: "August 28, 2026",
                 games: [
@@ -285,74 +294,58 @@
             }
         ];
 
-        function getScheduleData() {
-            const stored = localStorage.getItem('shia_city_schedule');
-            if (stored) {
-                try {
-                    let parsed = JSON.parse(stored);
-                    parsed.forEach(week => {
-                        week.games.forEach(g => {
-                            function cleanScore(val) {
-                                if (val === undefined || val === null) return null;
-                                let strVal = String(val).trim();
-                                if (strVal === '' || strVal === '-' || strVal.toLowerCase() === 'undefined' || strVal.toLowerCase() === 'nan') return null;
-                                let num = Number(strVal);
-                                return Number.isNaN(num) ? null : num;
-                            }
-                            g.s1 = cleanScore(g.s1);
-                            g.s2 = cleanScore(g.s2);
-                        });
-                    });
-                    return parsed;
-                } catch (e) {
-                    return rawSchedule;
-                }
+        async function loadCloudData() {
+            try {
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': API_KEY }
+                });
+                const result = await response.json();
+                
+                globalSchedule = (result.record.schedule && result.record.schedule.length > 0) ? result.record.schedule : defaultSchedule;
+                globalBoxscores = result.record.boxscores || {};
+                
+                initSchedulePage();
+            } catch (e) {
+                console.error("Error loading cloud data, falling back to default", e);
+                globalSchedule = defaultSchedule;
+                globalBoxscores = {};
+                initSchedulePage();
             }
-            return rawSchedule;
+        }
+
+        function getScheduleData() {
+            if (!globalSchedule || globalSchedule.length === 0) return defaultSchedule;
+            return globalSchedule.map(week => {
+                week.games.forEach(g => {
+                    function cleanScore(val) {
+                        if (val === undefined || val === null) return null;
+                        let strVal = String(val).trim();
+                        if (strVal === '' || strVal === '-' || strVal.toLowerCase() === 'undefined' || strVal.toLowerCase() === 'nan') return null;
+                        let num = Number(strVal);
+                        return Number.isNaN(num) ? null : num;
+                    }
+                    g.s1 = cleanScore(g.s1);
+                    g.s2 = cleanScore(g.s2);
+                });
+                return week;
+            });
         }
 
         function getStoredGameBoxScores() {
-            const data = localStorage.getItem('shia_city_game_boxscores');
-            return data ? JSON.parse(data) : {};
+            return globalBoxscores || {};
         }
 
-        const scheduleData = getScheduleData();
+        let scheduleData = [];
 
-        function exportStandingsToLocalStorage() {
-            let teamStats = {};
-            scheduleData.forEach(week => {
-                week.games.forEach(g => {
-                    let s1 = Number(g.s1);
-                    let s2 = Number(g.s2);
-                    let hasValidScore = (g.s1 !== null && g.s2 !== null && !isNaN(s1) && !isNaN(s2) && g.s1 !== '' && g.s2 !== '');
-                    
-                    if (hasValidScore) {
-                        if (!teamStats[g.team1]) teamStats[g.team1] = { wins: 0, losses: 0, ptsFor: 0, ptsAgainst: 0, diff: 0 };
-                        if (!teamStats[g.team2]) teamStats[g.team2] = { wins: 0, losses: 0, ptsFor: 0, ptsAgainst: 0, diff: 0 };
-
-                        teamStats[g.team1].ptsFor += s1;
-                        teamStats[g.team1].ptsAgainst += s2;
-                        teamStats[g.team1].diff += (s1 - s2);
-
-                        teamStats[g.team2].ptsFor += s2;
-                        teamStats[g.team2].ptsAgainst += s1;
-                        teamStats[g.team2].diff += (s2 - s1);
-
-                        if (s1 > s2) {
-                            teamStats[g.team1].wins++;
-                            teamStats[g.team2].losses++;
-                        } else if (s2 > s1) {
-                            teamStats[g.team2].wins++;
-                            teamStats[g.team1].losses++;
-                        }
-                    }
-                });
-            });
-            localStorage.setItem('shia_city_team_stats', JSON.stringify(teamStats));
+        function initSchedulePage() {
+            scheduleData = getScheduleData();
+            initDateDropdown();
+            applyFilters();
         }
 
         function initDateDropdown() {
             const select = document.getElementById('filter-date');
+            select.innerHTML = '<option value="">All Dates</option>';
             scheduleData.forEach(week => {
                 let opt = document.createElement('option');
                 opt.value = week.date;
@@ -645,9 +638,8 @@
             tbody.innerHTML = html;
         }
 
-        exportStandingsToLocalStorage();
-        initDateDropdown();
-        applyFilters();
+        // Initialize on load
+        loadCloudData();
     </script>
 </body>
 </html>
