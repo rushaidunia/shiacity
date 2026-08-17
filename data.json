@@ -8,8 +8,8 @@
           "court": "Court 1",
           "team1": "Azadars",
           "team2": "Ghazis",
-          "s1": 40,
-          "s2": 50,
+          "s1": 10,
+          "s2": 2,
           "team1Players": [
             {
               "name": "Ali Zaidi",
@@ -2230,5 +2230,5 @@
       }
     }
   },
-  "exportedAt": "2026-08-17T06:36:03.666Z"
+  "exportedAt": "2026-08-17T06:38:09.614Z"
 }
