@@ -8,8 +8,8 @@
           "court": "Court 1",
           "team1": "Azadars",
           "team2": "Ghazis",
-          "s1": 60,
-          "s2": 70,
+          "s1": 100,
+          "s2": 50,
           "team1Players": [
             {
               "name": "Ali Zaidi",
@@ -1692,7 +1692,7 @@
     "w0_g0": {
       "Azadars": {
         "Ali Zaidi": {
-          "pts": "90",
+          "pts": "45",
           "reb": "-",
           "stl": "-",
           "blk": "-",
@@ -1780,5 +1780,5 @@
       }
     }
   },
-  "exportedAt": "2026-08-17T01:37:10.855Z"
+  "exportedAt": "2026-08-17T01:45:38.306Z"
 }
