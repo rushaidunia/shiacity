@@ -46,6 +46,22 @@
                 <a href="previousseasons.html" class="hover:text-zinc-100 transition">Previous Seasons</a>
                 <a href="photos.html" class="hover:text-zinc-100 transition">Photos</a>
             </nav>
+
+            <!-- Mobile Hamburger Button -->
+            <button id="mobileMenuBtn" class="md:hidden text-zinc-300 hover:text-white focus:outline-none p-1">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobileMenu" class="hidden md:hidden px-4 pb-4 pt-2 border-t border-zinc-800/80 bg-[#09090b]/95 backdrop-blur-xl flex flex-col space-y-3 text-xs font-medium text-zinc-400">
+            <a href="index.html" class="hover:text-zinc-100 transition py-1">Home</a>
+            <a href="schedule.html" class="hover:text-zinc-100 transition py-1">Schedule</a>
+            <a href="stats.html" class="text-orange-400 font-semibold py-1">Stats & Standings</a>
+            <a href="previousseasons.html" class="hover:text-zinc-100 transition py-1">Previous Seasons</a>
+            <a href="photos.html" class="hover:text-zinc-100 transition py-1">Photos</a>
         </div>
     </header>
 
@@ -156,6 +172,14 @@
     <footer class="text-center text-xs text-zinc-600 mt-12 border-t border-zinc-900/80 pt-6 font-medium">
         © 2026 Shia City Basketball
     </footer>
+
+    <!-- Mobile Menu Toggle Script -->
+    <script>
+        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        });
+    </script>
 
     <script>
         const rawSchedule = [

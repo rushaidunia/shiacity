@@ -30,13 +30,15 @@
 <body class="bg-[#09090b] text-zinc-100 min-h-screen selection:bg-orange-500 selection:text-white pb-12 flex flex-col justify-between">
 
     <!-- Top Navigation Bar -->
-    <header class="border-b border-zinc-800/60 sticky top-0 z-30 bg-[#09090b]/80 backdrop-blur-xl">
+    <header class="border-b border-zinc-800/80 sticky top-0 z-30 bg-[#09090b]/85 backdrop-blur-xl">
         <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+            <!-- Brand Logo -->
             <div class="flex items-center gap-2.5">
-                <div class="w-7 h-7 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 font-black text-xs">SC</div>
+                <div class="w-7 h-7 rounded-lg bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400 font-black text-xs shadow-lg shadow-orange-500/20">SC</div>
                 <span class="text-xs font-bold tracking-wider text-zinc-200 uppercase">Shia City <span class="text-orange-400 font-extrabold">Basketball</span></span>
             </div>
 
+            <!-- Desktop Navigation Links -->
             <nav class="hidden md:flex items-center gap-6 text-xs font-medium text-zinc-400">
                 <a href="index.html" class="hover:text-zinc-100 transition">Home</a>
                 <a href="schedule.html" class="text-orange-400 font-semibold">Schedule</a>
@@ -44,6 +46,22 @@
                 <a href="previousseasons.html" class="hover:text-zinc-100 transition">Previous Seasons</a>
                 <a href="photos.html" class="hover:text-zinc-100 transition">Photos</a>
             </nav>
+
+            <!-- Mobile Hamburger Button -->
+            <button id="mobileMenuBtn" class="md:hidden text-zinc-300 hover:text-white focus:outline-none p-1">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobileMenu" class="hidden md:hidden px-4 pb-4 pt-2 border-t border-zinc-800/80 bg-[#09090b]/95 backdrop-blur-xl flex flex-col space-y-3 text-xs font-medium text-zinc-400">
+            <a href="index.html" class="hover:text-zinc-100 transition py-1">Home</a>
+            <a href="schedule.html" class="text-orange-400 font-semibold py-1">Schedule</a>
+            <a href="stats.html" class="hover:text-zinc-100 transition py-1">Stats & Standings</a>
+            <a href="previousseasons.html" class="hover:text-zinc-100 transition py-1">Previous Seasons</a>
+            <a href="photos.html" class="hover:text-zinc-100 transition py-1">Photos</a>
         </div>
     </header>
 
@@ -191,6 +209,14 @@
         © 2026 Shia City Basketball
     </footer>
 
+    <!-- Mobile Menu Toggle Script -->
+    <script>
+        document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        });
+    </script>
+
     <script>
         const rawSchedule = [
             {
@@ -285,8 +311,6 @@
             }
         ];
 
-        // ---- Data loading: localStorage (local admin browser) first, falling back to
-        // ---- data.json (published copy, used by every other visitor on Netlify/GitHub) ----
         let __cachedSchedule = null;
         let __cachedBoxScores = null;
 
@@ -311,8 +335,6 @@
             const storedSchedule = localStorage.getItem('shia_city_schedule');
             const storedBoxScores = localStorage.getItem('shia_city_game_boxscores');
 
-            // If this browser has admin edits in localStorage, use them directly
-            // (this is what keeps your local editing workflow instant, unchanged).
             if (storedSchedule || storedBoxScores) {
                 try {
                     __cachedSchedule = storedSchedule ? cleanScheduleScores(JSON.parse(storedSchedule)) : null;
@@ -323,7 +345,6 @@
                 return;
             }
 
-            // Otherwise (e.g. a visitor on the live site), load the published data.json.
             try {
                 const res = await fetch(`data.json?t=${Date.now()}`, { cache: 'no-store' });
                 if (res.ok) {
