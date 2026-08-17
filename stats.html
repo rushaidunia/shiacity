@@ -29,6 +29,14 @@
 </head>
 <body class="bg-[#09090b] text-zinc-100 min-h-screen selection:bg-orange-500 selection:text-white pb-16 flex flex-col justify-between">
 
+    <!-- Tailwind CSS warm-up (hidden): these exact classes are only otherwise used
+         inside JS template strings in renderTeamRosters(), so the CDN JIT never
+         sees them until that HTML is injected on tab-switch, causing a brief
+         flash of unstyled rows. Listing them here forces Tailwind to compile
+         them on initial page load instead. Safe to extend if more classes are
+         added to renderTeamRosters() later. -->
+    <div class="hidden divide-zinc-800/30 ml-1.5 px-1.5 py-2.5 py-3 table-fixed w-2/5 w-[10%]"></div>
+
     <!-- Top Navigation Bar -->
     <header class="border-b border-zinc-800/60 sticky top-0 z-30 bg-[#09090b]/80 backdrop-blur-xl">
         <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
