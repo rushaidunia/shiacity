@@ -364,21 +364,87 @@
             }
         ];
 
-        function getScheduleData() {
-            const stored = localStorage.getItem('shia_city_schedule');
-            if (stored) {
+        // ---- Data loading: localStorage (local admin browser) first, falling back to
+        // ---- data.json (published copy, used by every other visitor on Netlify/GitHub) ----
+        let __cachedSchedule = null;
+        let __cachedBoxScores = null;
+
+        async function loadGameData() {
+            const storedSchedule = localStorage.getItem('shia_city_schedule');
+            const storedBoxScores = localStorage.getItem('shia_city_game_boxscores');
+
+            // If this browser has admin edits in localStorage, use them directly
+            // (this is what keeps your local editing workflow instant, unchanged).
+            if (storedSchedule || storedBoxScores) {
                 try {
-                    return JSON.parse(stored);
+                    __cachedSchedule = storedSchedule ? JSON.parse(storedSchedule) : null;
                 } catch (e) {
-                    return rawSchedule;
+                    __cachedSchedule = null;
                 }
+                __cachedBoxScores = storedBoxScores ? JSON.parse(storedBoxScores) : {};
+                return;
             }
-            return rawSchedule;
+
+            // Otherwise (e.g. a visitor on the live site), load the published data.json.
+            try {
+                const res = await fetch('data.json', { cache: 'no-store' });
+                if (res.ok) {
+                    const json = await res.json();
+                    __cachedSchedule = json.schedule || null;
+                    __cachedBoxScores = json.boxScores || {};
+                    return;
+                }
+            } catch (e) {
+                console.warn('data.json not found, falling back to built-in default schedule.', e);
+            }
+
+            __cachedSchedule = null;
+            __cachedBoxScores = {};
+        }
+
+        function getScheduleData() {
+            return __cachedSchedule || rawSchedule;
         }
 
         function getStoredGameBoxScores() {
-            const data = localStorage.getItem('shia_city_game_boxscores');
-            return data ? JSON.parse(data) : {};
+            return __cachedBoxScores || {};
+        }
+
+        // Computes team win/loss/points-for/points-against directly from schedule data.
+        // (Previously this relied on schedule.html having run first and cached the result
+        // in localStorage — which broke if a visitor landed on stats.html first.)
+        function computeTeamStats() {
+            const schedule = getScheduleData();
+            let teamStats = {};
+            schedule.forEach(week => {
+                week.games.forEach(g => {
+                    let s1 = Number(g.s1);
+                    let s2 = Number(g.s2);
+                    let hasValidScore = (g.s1 !== null && g.s2 !== null && !isNaN(s1) && !isNaN(s2) && g.s1 !== '' && g.s2 !== '');
+
+                    if (hasValidScore) {
+                        if (!teamStats[g.team1]) teamStats[g.team1] = { wins: 0, losses: 0, ptsFor: 0, ptsAgainst: 0, diff: 0 };
+                        if (!teamStats[g.team2]) teamStats[g.team2] = { wins: 0, losses: 0, ptsFor: 0, ptsAgainst: 0, diff: 0 };
+
+                        teamStats[g.team1].ptsFor += s1;
+                        teamStats[g.team1].ptsAgainst += s2;
+                        teamStats[g.team1].diff += (s1 - s2);
+
+                        teamStats[g.team2].ptsFor += s2;
+                        teamStats[g.team2].ptsAgainst += s1;
+                        teamStats[g.team2].diff += (s2 - s1);
+
+                        if (s1 > s2) {
+                            teamStats[g.team1].wins++;
+                            teamStats[g.team2].losses++;
+                        } else if (s2 > s1) {
+                            teamStats[g.team2].wins++;
+                            teamStats[g.team1].losses++;
+                        }
+                    }
+                });
+            });
+            return teamStats;
         }
 
         function getStoredLeagueData() {
@@ -481,21 +547,18 @@
                 team.oppPpg = 0;
             });
 
-            const savedStats = localStorage.getItem('shia_city_team_stats');
-            if (savedStats) {
-                const parsed = JSON.parse(savedStats);
-                leagueData.forEach(team => {
-                    if (parsed[team.teamName]) {
-                        team.wins = parsed[team.teamName].wins;
-                        team.losses = parsed[team.teamName].losses;
-                        let totalGamesPlayed = team.wins + team.losses;
-                        if (totalGamesPlayed > 0) {
-                            team.ppgTeam = Number((parsed[team.teamName].ptsFor / totalGamesPlayed).toFixed(1));
-                            team.oppPpg = Number((parsed[team.teamName].ptsAgainst / totalGamesPlayed).toFixed(1));
-                        }
+            const computed = computeTeamStats();
+            leagueData.forEach(team => {
+                if (computed[team.teamName]) {
+                    team.wins = computed[team.teamName].wins;
+                    team.losses = computed[team.teamName].losses;
+                    let totalGamesPlayed = team.wins + team.losses;
+                    if (totalGamesPlayed > 0) {
+                        team.ppgTeam = Number((computed[team.teamName].ptsFor / totalGamesPlayed).toFixed(1));
+                        team.oppPpg = Number((computed[team.teamName].ptsAgainst / totalGamesPlayed).toFixed(1));
                     }
-                });
-            }
+                }
+            });
 
             aggregatePlayerStats(leagueData);
         }
@@ -728,7 +791,10 @@
             });
         }
 
-        renderStandings();
+        (async function bootstrap() {
+            await loadGameData();
+            renderStandings();
+        })();
     </script>
 </body>
 </html>

@@ -285,38 +285,70 @@
             }
         ];
 
-        function getScheduleData() {
-            const stored = localStorage.getItem('shia_city_schedule');
-            if (stored) {
-                try {
-                    let parsed = JSON.parse(stored);
-                    parsed.forEach(week => {
-                        week.games.forEach(g => {
-                            function cleanScore(val) {
-                                if (val === undefined || val === null) return null;
-                                let strVal = String(val).trim();
-                                if (strVal === '' || strVal === '-' || strVal.toLowerCase() === 'undefined' || strVal.toLowerCase() === 'nan') return null;
-                                let num = Number(strVal);
-                                return Number.isNaN(num) ? null : num;
-                            }
-                            g.s1 = cleanScore(g.s1);
-                            g.s2 = cleanScore(g.s2);
-                        });
-                    });
-                    return parsed;
-                } catch (e) {
-                    return rawSchedule;
-                }
+        // ---- Data loading: localStorage (local admin browser) first, falling back to
+        // ---- data.json (published copy, used by every other visitor on Netlify/GitHub) ----
+        let __cachedSchedule = null;
+        let __cachedBoxScores = null;
+
+        function cleanScheduleScores(parsed) {
+            function cleanScore(val) {
+                if (val === undefined || val === null) return null;
+                let strVal = String(val).trim();
+                if (strVal === '' || strVal === '-' || strVal.toLowerCase() === 'undefined' || strVal.toLowerCase() === 'nan') return null;
+                let num = Number(strVal);
+                return Number.isNaN(num) ? null : num;
             }
-            return rawSchedule;
+            parsed.forEach(week => {
+                week.games.forEach(g => {
+                    g.s1 = cleanScore(g.s1);
+                    g.s2 = cleanScore(g.s2);
+                });
+            });
+            return parsed;
+        }
+
+        async function loadGameData() {
+            const storedSchedule = localStorage.getItem('shia_city_schedule');
+            const storedBoxScores = localStorage.getItem('shia_city_game_boxscores');
+
+            // If this browser has admin edits in localStorage, use them directly
+            // (this is what keeps your local editing workflow instant, unchanged).
+            if (storedSchedule || storedBoxScores) {
+                try {
+                    __cachedSchedule = storedSchedule ? cleanScheduleScores(JSON.parse(storedSchedule)) : null;
+                } catch (e) {
+                    __cachedSchedule = null;
+                }
+                __cachedBoxScores = storedBoxScores ? JSON.parse(storedBoxScores) : {};
+                return;
+            }
+
+            // Otherwise (e.g. a visitor on the live site), load the published data.json.
+            try {
+                const res = await fetch('data.json', { cache: 'no-store' });
+                if (res.ok) {
+                    const json = await res.json();
+                    __cachedSchedule = json.schedule ? cleanScheduleScores(json.schedule) : null;
+                    __cachedBoxScores = json.boxScores || {};
+                    return;
+                }
+            } catch (e) {
+                console.warn('data.json not found, falling back to built-in default schedule.', e);
+            }
+
+            __cachedSchedule = null;
+            __cachedBoxScores = {};
+        }
+
+        function getScheduleData() {
+            return __cachedSchedule || rawSchedule;
         }
 
         function getStoredGameBoxScores() {
-            const data = localStorage.getItem('shia_city_game_boxscores');
-            return data ? JSON.parse(data) : {};
+            return __cachedBoxScores || {};
         }
 
-        const scheduleData = getScheduleData();
+        let scheduleData = null;
 
         function exportStandingsToLocalStorage() {
             let teamStats = {};
@@ -645,9 +677,13 @@
             tbody.innerHTML = html;
         }
 
-        exportStandingsToLocalStorage();
-        initDateDropdown();
-        applyFilters();
+        (async function bootstrap() {
+            await loadGameData();
+            scheduleData = getScheduleData();
+            exportStandingsToLocalStorage();
+            initDateDropdown();
+            applyFilters();
+        })();
     </script>
 </body>
 </html>
