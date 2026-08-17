@@ -8,7 +8,7 @@
           "court": "Court 1",
           "team1": "Azadars",
           "team2": "Ghazis",
-          "s1": 75,
+          "s1": 87,
           "s2": 50,
           "team1Players": [
             {
@@ -2230,5 +2230,5 @@
       }
     }
   },
-  "exportedAt": "2026-08-17T03:37:09.457Z"
+  "exportedAt": "2026-08-17T04:26:04.954Z"
 }
