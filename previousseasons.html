@@ -83,13 +83,16 @@
         </div>
 
         <!-- Sub-Navigation Tabs (Standings / Leaders / Rosters) -->
-        <div class="flex justify-between items-center bg-zinc-900/60 border border-zinc-800/80 p-2 rounded-xl backdrop-blur-md">
-            <div class="flex gap-1">
-                <button onclick="switchSubTab('standings')" id="subbtn-standings" class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition text-zinc-400 hover:text-white">Standings</button>
-                <button onclick="switchSubTab('leaders')" id="subbtn-leaders" class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition text-zinc-400 hover:text-white">Leaderboards</button>
-                <button onclick="switchSubTab('players')" id="subbtn-players" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-zinc-800 text-zinc-100 shadow-sm">Team Rosters & Stats</button>
+        <div class="flex justify-between items-center gap-1 bg-zinc-900/60 border border-zinc-800/80 p-2 rounded-xl backdrop-blur-md overflow-x-auto">
+            <div class="flex gap-1 shrink-0">
+                <button onclick="switchSubTab('standings')" id="subbtn-standings" class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition text-zinc-400 hover:text-white whitespace-nowrap">Standings</button>
+                <button onclick="switchSubTab('leaders')" id="subbtn-leaders" class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition text-zinc-400 hover:text-white whitespace-nowrap">Leaderboards</button>
+                <button onclick="switchSubTab('players')" id="subbtn-players" class="px-2.5 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition bg-zinc-800 text-zinc-100 shadow-sm whitespace-nowrap">
+                    <span class="sm:hidden">Stats</span>
+                    <span class="hidden sm:inline">Team Rosters & Stats</span>
+                </button>
             </div>
-            <div id="season-badge" class="bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[11px] px-3 py-1 rounded-lg font-bold">
+            <div id="season-badge" class="bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[10px] sm:text-[11px] px-2.5 sm:px-3 py-1 rounded-lg font-bold shrink-0 whitespace-nowrap">
                 Season 1 Archive
             </div>
         </div>
@@ -732,9 +735,9 @@
                 const btn = document.getElementById(`subbtn-${t}`);
                 if (btn) {
                     if (t === subTabId) {
-                        btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition bg-zinc-800 text-zinc-100 shadow-sm";
+                        btn.className = "px-2.5 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition bg-zinc-800 text-zinc-100 shadow-sm whitespace-nowrap";
                     } else {
-                        btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-medium transition text-zinc-400 hover:text-white";
+                        btn.className = "px-2.5 sm:px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition text-zinc-400 hover:text-white whitespace-nowrap";
                     }
                 }
             });
