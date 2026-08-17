@@ -8,8 +8,8 @@
           "court": "Court 1",
           "team1": "Azadars",
           "team2": "Ghazis",
-          "s1": 40,
-          "s2": 20
+          "s1": 10,
+          "s2": 5
         },
         {
           "time": "9:00-10:00 PM",
@@ -410,7 +410,21 @@
     "w0_g0": {
       "Azadars": {
         "Ali Zaidi": {
-          "pts": "20",
+          "pts": "10",
+          "reb": "-",
+          "stl": "-",
+          "blk": "-",
+          "tpm": "-"
+        },
+        "Murtaza Hussain": {
+          "pts": "12",
+          "reb": "-",
+          "stl": "-",
+          "blk": "-",
+          "tpm": "-"
+        },
+        "Hashim Shah": {
+          "pts": "-",
           "reb": "-",
           "stl": "-",
           "blk": "-",
@@ -423,21 +437,7 @@
           "blk": "-",
           "tpm": "-"
         },
-        "Murtaza Hussain": {
-          "pts": "-",
-          "reb": "-",
-          "stl": "-",
-          "blk": "-",
-          "tpm": "-"
-        },
         "Hani Zahid": {
-          "pts": "-",
-          "reb": "-",
-          "stl": "-",
-          "blk": "-",
-          "tpm": "-"
-        },
-        "Hashim Shah": {
           "pts": "-",
           "reb": "-",
           "stl": "-",
@@ -460,13 +460,6 @@
           "blk": "-",
           "tpm": "-"
         },
-        "Syed Ale Hassan": {
-          "pts": "-",
-          "reb": "-",
-          "stl": "-",
-          "blk": "-",
-          "tpm": "-"
-        },
         "Abbas Aslam": {
           "pts": "-",
           "reb": "-",
@@ -474,7 +467,7 @@
           "blk": "-",
           "tpm": "-"
         },
-        "Irtaza Hassan": {
+        "Syed Ale Hassan": {
           "pts": "-",
           "reb": "-",
           "stl": "-",
@@ -482,6 +475,13 @@
           "tpm": "-"
         },
         "Zulfiqar Hussain": {
+          "pts": "-",
+          "reb": "-",
+          "stl": "-",
+          "blk": "-",
+          "tpm": "-"
+        },
+        "Irtaza Hassan": {
           "pts": "-",
           "reb": "-",
           "stl": "-",
@@ -498,5 +498,5 @@
       }
     }
   },
-  "exportedAt": "2026-08-17T15:27:46.930Z"
+  "exportedAt": "2026-08-17T22:54:35.506Z"
 }
