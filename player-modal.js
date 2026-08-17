@@ -10,44 +10,44 @@
 (function () {
     // Inject the modal markup once, so neither page has to keep its own copy in sync.
     const modalHtml = `
-    <div id="player-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden p-4">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
+    <div id="player-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden p-2 sm:p-4">
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh] animate-in fade-in zoom-in duration-200">
             <!-- Modal Header -->
-            <div class="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-950/60">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 font-bold text-sm">🏀</div>
+            <div class="p-3 sm:p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-950/60 shrink-0">
+                <div class="flex items-center gap-2.5 sm:gap-3">
+                    <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 font-bold text-xs sm:text-sm">🏀</div>
                     <div>
-                        <h2 id="modal-player-name" class="text-sm font-extrabold text-zinc-100">Player Name</h2>
-                        <p class="text-[11px] text-zinc-400 font-medium">Career Statistics Across Seasons</p>
+                        <h2 id="modal-player-name" class="text-xs sm:text-sm font-extrabold text-zinc-100">Player Name</h2>
+                        <p class="text-[10px] sm:text-[11px] text-zinc-400 font-medium">Career Statistics Across Seasons</p>
                     </div>
                 </div>
-                <button onclick="closePlayerModal()" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 flex items-center justify-center transition text-xs font-bold">✕</button>
+                <button onclick="closePlayerModal()" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-100 flex items-center justify-center transition text-xs font-bold">✕</button>
             </div>
 
             <!-- Modal Body -->
-            <div class="p-5 overflow-y-auto flex flex-col gap-5">
+            <div class="p-3 sm:p-5 overflow-y-auto flex-1 min-h-0 flex flex-col gap-4 sm:gap-5">
                 <!-- Summary Stats Pills -->
-                <div id="modal-summary-pills" class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div id="modal-summary-pills" class="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
                     <!-- Injected dynamically -->
                 </div>
 
                 <!-- Season Breakdown Table -->
                 <div class="border border-zinc-800/80 rounded-xl overflow-hidden bg-zinc-950/40">
-                    <div class="p-3 border-b border-zinc-800/80 bg-zinc-900/40">
-                        <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider">Season-by-Season Logs</h3>
+                    <div class="p-2.5 sm:p-3 border-b border-zinc-800/80 bg-zinc-900/40">
+                        <h3 class="text-[11px] sm:text-xs font-bold text-zinc-300 uppercase tracking-wider">Season-by-Season Logs</h3>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
-                                <tr class="bg-zinc-950/60 text-zinc-500 border-b border-zinc-800 text-[11px] uppercase tracking-wider font-semibold">
-                                    <th class="p-3">Season</th>
-                                    <th class="p-3">Team</th>
-                                    <th class="p-3 text-center">GP</th>
-                                    <th class="p-3 text-center">PPG</th>
-                                    <th class="p-3 text-center">REB</th>
-                                    <th class="p-3 text-center">STL</th>
-                                    <th class="p-3 text-center">BLK</th>
-                                    <th class="p-3 text-center pr-4">3PM</th>
+                                <tr class="bg-zinc-950/60 text-zinc-500 border-b border-zinc-800 text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold">
+                                    <th class="p-2.5 sm:p-3">Season</th>
+                                    <th class="p-2.5 sm:p-3">Team</th>
+                                    <th class="p-2.5 sm:p-3 text-center">GP</th>
+                                    <th class="p-2.5 sm:p-3 text-center">PPG</th>
+                                    <th class="p-2.5 sm:p-3 text-center">REB</th>
+                                    <th class="p-2.5 sm:p-3 text-center">STL</th>
+                                    <th class="p-2.5 sm:p-3 text-center">BLK</th>
+                                    <th class="p-2.5 sm:p-3 text-center pr-3 sm:pr-4">3PM</th>
                                 </tr>
                             </thead>
                             <tbody id="modal-table-body" class="divide-y divide-zinc-800/40 font-mono text-zinc-300">
@@ -55,11 +55,15 @@
                             </tbody>
                         </table>
                     </div>
+                    <!-- Mobile Horizontal Scroll Hint -->
+                    <div class="py-2 px-3 bg-zinc-950/80 text-center text-[10px] text-zinc-400 border-t border-zinc-800/40 sm:hidden flex items-center justify-center gap-1.5 font-sans">
+                        <span class="text-orange-400 font-bold">←</span> Scroll horizontally to see more stats <span class="text-orange-400 font-bold">→</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Modal Footer -->
-            <div class="p-3 border-t border-zinc-800 bg-zinc-950/60 flex justify-end">
+            <div class="p-2.5 sm:p-3 border-t border-zinc-800 bg-zinc-950/60 flex justify-end shrink-0">
                 <button onclick="closePlayerModal()" class="px-4 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition">Close</button>
             </div>
         </div>
@@ -173,14 +177,14 @@
                 let row = document.createElement('tr');
                 row.className = "hover:bg-zinc-800/30 transition-colors";
                 row.innerHTML = `
-                    <td class="p-3 font-semibold text-zinc-200">${log.season}</td>
-                    <td class="p-3 text-zinc-400">${log.team}</td>
-                    <td class="p-3 text-center">${log.gp}</td>
-                    <td class="p-3 text-center font-bold text-orange-400">${typeof log.ppg === 'number' ? Number(log.ppg).toFixed(1) : '-'}</td>
-                    <td class="p-3 text-center">${typeof log.reb === 'number' ? Number(log.reb).toFixed(1) : '-'}</td>
-                    <td class="p-3 text-center">${typeof log.stl === 'number' ? Number(log.stl).toFixed(1) : '-'}</td>
-                    <td class="p-3 text-center">${typeof log.blk === 'number' ? Number(log.blk).toFixed(1) : '-'}</td>
-                    <td class="p-3 text-center pr-4">${typeof log.tpm === 'number' ? Number(log.tpm).toFixed(1) : '-'}</td>
+                    <td class="p-2.5 sm:p-3 font-semibold text-zinc-200">${log.season}</td>
+                    <td class="p-2.5 sm:p-3 text-zinc-400">${log.team}</td>
+                    <td class="p-2.5 sm:p-3 text-center">${log.gp}</td>
+                    <td class="p-2.5 sm:p-3 text-center font-bold text-orange-400">${typeof log.ppg === 'number' ? Number(log.ppg).toFixed(1) : '-'}</td>
+                    <td class="p-2.5 sm:p-3 text-center">${typeof log.reb === 'number' ? Number(log.reb).toFixed(1) : '-'}</td>
+                    <td class="p-2.5 sm:p-3 text-center">${typeof log.stl === 'number' ? Number(log.stl).toFixed(1) : '-'}</td>
+                    <td class="p-2.5 sm:p-3 text-center">${typeof log.blk === 'number' ? Number(log.blk).toFixed(1) : '-'}</td>
+                    <td class="p-2.5 sm:p-3 text-center pr-3 sm:pr-4">${typeof log.tpm === 'number' ? Number(log.tpm).toFixed(1) : '-'}</td>
                 `;
                 modalTableBody.appendChild(row);
             });
@@ -193,25 +197,25 @@
         const avgTpm = seasonsCount > 0 ? (totalTpm / seasonsCount).toFixed(1) : '0.0';
 
         summaryPills.innerHTML = `
-            <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Career PPG</span>
-                <span class="text-base font-extrabold text-orange-400 font-mono mt-0.5">${avgPpg}</span>
+            <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-2.5 sm:p-3 flex flex-col items-center justify-center text-center">
+                <span class="text-[9px] sm:text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Career PPG</span>
+                <span class="text-sm sm:text-base font-extrabold text-orange-400 font-mono mt-0.5">${avgPpg}</span>
             </div>
-            <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Career REB</span>
-                <span class="text-base font-extrabold text-zinc-200 font-mono mt-0.5">${avgReb}</span>
+            <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-2.5 sm:p-3 flex flex-col items-center justify-center text-center">
+                <span class="text-[9px] sm:text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Career REB</span>
+                <span class="text-sm sm:text-base font-extrabold text-zinc-200 font-mono mt-0.5">${avgReb}</span>
             </div>
-            <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Career STL</span>
-                <span class="text-base font-extrabold text-zinc-200 font-mono mt-0.5">${avgStl}</span>
+            <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-2.5 sm:p-3 flex flex-col items-center justify-center text-center">
+                <span class="text-[9px] sm:text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Career STL</span>
+                <span class="text-sm sm:text-base font-extrabold text-zinc-200 font-mono mt-0.5">${avgStl}</span>
             </div>
-            <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Career BLK</span>
-                <span class="text-base font-extrabold text-zinc-200 font-mono mt-0.5">${avgBlk}</span>
+            <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-2.5 sm:p-3 flex flex-col items-center justify-center text-center">
+                <span class="text-[9px] sm:text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Career BLK</span>
+                <span class="text-sm sm:text-base font-extrabold text-zinc-200 font-mono mt-0.5">${avgBlk}</span>
             </div>
-            <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Career 3PM</span>
-                <span class="text-base font-extrabold text-zinc-200 font-mono mt-0.5">${avgTpm}</span>
+            <div class="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-2.5 sm:p-3 flex flex-col items-center justify-center text-center">
+                <span class="text-[9px] sm:text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Career 3PM</span>
+                <span class="text-sm sm:text-base font-extrabold text-zinc-200 font-mono mt-0.5">${avgTpm}</span>
             </div>
         `;
 
