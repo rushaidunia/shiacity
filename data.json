@@ -173,8 +173,8 @@
           "court": "Court 2",
           "team1": "bWood",
           "team2": "Azadars",
-          "s1": 30,
-          "s2": 20
+          "s1": null,
+          "s2": null
         },
         {
           "time": "9:00-10:00 PM",
@@ -234,8 +234,8 @@
           "court": "Court 1",
           "team1": "Intifada",
           "team2": "Azadars",
-          "s1": 10,
-          "s2": 45
+          "s1": null,
+          "s2": null
         },
         {
           "time": "10:00-11:00 PM",
@@ -255,8 +255,8 @@
           "court": "Court 1",
           "team1": "Jabal",
           "team2": "Azadars",
-          "s1": 23,
-          "s2": 34
+          "s1": null,
+          "s2": null
         },
         {
           "time": "9:00-10:00 PM",
@@ -316,8 +316,8 @@
           "court": "Court 3",
           "team1": "313 Wolves",
           "team2": "Azadars",
-          "s1": 12,
-          "s2": 23
+          "s1": null,
+          "s2": null
         },
         {
           "time": "10:00-11:00 PM",
@@ -377,8 +377,8 @@
           "court": "Court 2",
           "team1": "Azadars",
           "team2": "House of Hyder",
-          "s1": 31,
-          "s2": 12
+          "s1": null,
+          "s2": null
         }
       ]
     },
@@ -406,8 +406,8 @@
           "court": "Court 3",
           "team1": "Azadars",
           "team2": "Benchwarmers",
-          "s1": 32,
-          "s2": 11
+          "s1": null,
+          "s2": null
         },
         {
           "time": "10:00-11:00 PM",
@@ -467,8 +467,8 @@
           "court": "Court 2",
           "team1": "Azadars",
           "team2": "Unc Time",
-          "s1": 31,
-          "s2": 11
+          "s1": null,
+          "s2": null
         }
       ]
     },
@@ -488,8 +488,8 @@
           "court": "Court 2",
           "team1": "The Resistance",
           "team2": "Azadars",
-          "s1": 10,
-          "s2": 40
+          "s1": null,
+          "s2": null
         },
         {
           "time": "9:00-10:00 PM",
@@ -746,7 +746,7 @@
       },
       "Azadars": {
         "Ali Zaidi": {
-          "pts": "60",
+          "pts": "-",
           "reb": "-",
           "stl": "-",
           "blk": "-",
@@ -926,7 +926,7 @@
       },
       "Azadars": {
         "Ali Zaidi": {
-          "pts": "43",
+          "pts": "-",
           "reb": "-",
           "stl": "-",
           "blk": "-",
@@ -1646,7 +1646,7 @@
       },
       "Azadars": {
         "Ali Zaidi": {
-          "pts": "21",
+          "pts": "-",
           "reb": "-",
           "stl": "-",
           "blk": "-",
@@ -1782,7 +1782,7 @@
     "w7_g4": {
       "Azadars": {
         "Ali Zaidi": {
-          "pts": "23",
+          "pts": "-",
           "reb": "-",
           "stl": "-",
           "blk": "-",
@@ -1872,7 +1872,7 @@
     "w6_g2": {
       "Azadars": {
         "Ali Zaidi": {
-          "pts": "45",
+          "pts": "-",
           "reb": "-",
           "stl": "-",
           "blk": "-",
@@ -1962,7 +1962,7 @@
     "w5_g4": {
       "Azadars": {
         "Ali Zaidi": {
-          "pts": "41",
+          "pts": "-",
           "reb": "-",
           "stl": "-",
           "blk": "-",
@@ -2096,7 +2096,7 @@
       },
       "Azadars": {
         "Ali Zaidi": {
-          "pts": "46",
+          "pts": "-",
           "reb": "-",
           "stl": "-",
           "blk": "-",
@@ -2186,7 +2186,7 @@
       },
       "Azadars": {
         "Ali Zaidi": {
-          "pts": "50",
+          "pts": "-",
           "reb": "-",
           "stl": "-",
           "blk": "-",
@@ -2230,5 +2230,5 @@
       }
     }
   },
-  "exportedAt": "2026-08-17T02:08:47.688Z"
+  "exportedAt": "2026-08-17T02:21:55.307Z"
 }
