@@ -410,11 +410,11 @@
     "w0_g0": {
       "Azadars": {
         "Ali Zaidi": {
-          "pts": "20",
-          "reb": "10",
-          "stl": "10",
+          "pts": "10",
+          "reb": "5",
+          "stl": "5",
           "blk": "5",
-          "tpm": "7"
+          "tpm": "2"
         },
         "Murtaza Hussain": {
           "pts": "-",
@@ -498,5 +498,5 @@
       }
     }
   },
-  "exportedAt": "2026-08-18T08:14:17.130Z"
+  "exportedAt": "2026-08-18T08:18:14.011Z"
 }
