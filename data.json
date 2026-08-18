@@ -8,16 +8,16 @@
           "court": "Court 1",
           "team1": "Azadars",
           "team2": "Ghazis",
-          "s1": 12,
-          "s2": 5
+          "s1": 30,
+          "s2": 20
         },
         {
           "time": "9:00-10:00 PM",
           "court": "Court 2",
           "team1": "Intifada",
           "team2": "House of Hyder",
-          "s1": null,
-          "s2": null
+          "s1": 23,
+          "s2": 12
         },
         {
           "time": "9:00-10:00 PM",
@@ -410,14 +410,14 @@
     "w0_g0": {
       "Azadars": {
         "Ali Zaidi": {
-          "pts": "10",
-          "reb": "-",
-          "stl": "-",
-          "blk": "-",
-          "tpm": "-"
+          "pts": "20",
+          "reb": "11",
+          "stl": "2",
+          "blk": "1",
+          "tpm": "2"
         },
         "Murtaza Hussain": {
-          "pts": "12",
+          "pts": "-",
           "reb": "-",
           "stl": "-",
           "blk": "-",
@@ -498,5 +498,5 @@
       }
     }
   },
-  "exportedAt": "2026-08-17T23:06:50.161Z"
+  "exportedAt": "2026-08-17T23:24:09.496Z"
 }
